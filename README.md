@@ -1,6 +1,6 @@
 # goodROPbadROP
 repo for ECE750 final project
-- TODO list:
+## TODO list:
 We can bend the story however we want, but I think we should have at least the following:
 - A C program ```target.c```
 - 2 binaries compiled from ```target.c```: ```target_with_cfi```, and ```target_without_cfi```
