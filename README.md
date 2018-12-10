@@ -1,5 +1,9 @@
 # goodROPbadROP
 repo for ECE750 final project
+
+## Dependencies
+Triton and everything it needs: https://github.com/JonathanSalwan/Triton
+
 ## TODO list:
 We can bend the story however we want, but I think we should have at least the following:
 - A C program ```target.c```
