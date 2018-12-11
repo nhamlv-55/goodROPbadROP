@@ -14,3 +14,13 @@ We can bend the story however we want, but I think we should have at least the f
     - cannot exploit ```target_with_cfi```.
 - 1 ROP chain ```goodROP``` that can exploit both binaries.
 - Something to generate those 2 ROP chains (the end goal).
+
+## HOW TO RUN CROP.C
+
+```
+sea pf crop.c -m64 --cex=h.ll --show-invars --inline
+sea exe -m64 crop.c h.ll -o OUTPUT
+./OUTPUT
+```
+
+
