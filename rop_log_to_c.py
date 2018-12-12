@@ -37,10 +37,14 @@ def inst_to_c(inst):
     op = inst[:3]
     args = inst[4:]
     if op=="inc":
-        result = "\t%s++;\n"%args
+        if "dword" in args:
+            result = "\t%s++;\n"%args[-4:-1]
+        else:
+            result = "\t%s++;\n"%args
     elif op=="pop":
         result = "\t%s = pop();\n"%args
     elif op=="add" or op=="sub":
+        return "\t%s();\n"%"not_implemented"
         a1, a2 = args.split(", ")
         if "dword ptr" in a1 and "dword ptr" not in a2:
             result = "\t%s_to_pointer(%s, %s);\n"%(op, a1[-4:-1], a2)
@@ -56,16 +60,14 @@ def inst_to_c(inst):
     elif op=="mov":
         target, val = args.split(", ")
         if "dword" in target and "dword" not in val:
-            if val.isdigit():
-                result = "\tmove_mem_const(%s, %s);\n"%(target[-4:-1], val)
-            else:
-                result = "\tmove_mem_reg(%s, %s);\n"%(target[-4:-1], val)
+            result = "\tmove_mem_const(%s, %s);\n"%(target[-4:-1], val)
         elif "dword" not in target and "dword" in val:
-            result = "\tmove_reg_mem(%s, %s);\n"%(target, val[-4: -1])
+            result = "\t%s = move_reg_mem(%s);\n"%(target, val[-4: -1])
         else:
             if target.isdigit():
-                result = "\tmove_reg_const(%sm %s);\n"%(target, val)
-                result = "\tmove_reg_reg(%s, %s);\n"%(target, val)
+                #result = "\tmove_reg_const(%sm %s);\n"%(target, val)
+                result = "\t%s = %s;\n"%(target, val)
+               #result = "\tmove_reg_reg(%s, %s);\n"%(target, val)
     elif op=="xor":
         a1, a2 = args.split(", ")
         if a1==a2:
