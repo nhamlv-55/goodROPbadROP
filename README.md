@@ -22,5 +22,13 @@ sea pf crop.c -m64 --cex=h.ll --show-invars --inline
 sea exe -m64 crop.c h.ll -o OUTPUT
 ./OUTPUT
 ```
+## HOW TO RUN THE WHOLE PIPELINE
+```
+python rop_log_to_c.py rop/roplog > tail.c
+cat head.c tail.c > merge.c
 
+sea pf merge.c -m64 --cex=h.ll --show-invars --inline
+sea exe -m64 merge.c h.ll -o OUTPUT
+./OUTPUT
+```
 
