@@ -1,15 +1,5 @@
 #include "seahorn/seahorn.h"
 extern int nd(void);
-
-int s0 = 0;
-int s1 = 0;
-int s2 = 0;
-int s3 = 0;
-int s4 = 0;
-
-int eax = 0, ebx = 0, ecx = 0, edx = 0;
-
-
 void print_state(){
 	printf("eax: %d, ebx: %d, ecx: %d, edx: %d, ", eax, ebx, ecx, edx);
 	printf("[");
