@@ -1,94 +1,32 @@
 from sets import Set
-import sys
+import argparse
+import json
+from utils import *
 
-output = sys.argv[1] #expected output from ROPgadget
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--roplog", help="all the rops founded by ROPgadget")
+parser.add_argument("--config", help="a json file contain the desire Init and Goal state")
+parser.add_argument("--coutput", help="the output c program")
+args = parser.parse_args()
+
+with open(args.config) as f:
+	config = json.load(f)
+
+in_file = args.roplog
+out_file = args.coutput
 
 pruned = []
-implemented = ["ret", "pop", "add", "inc", "sub", "mov", "xor"]
-registers = ["eax", "ebx", "ecx", "edx"]
+config["implemented"] = ["ret", "pop", "add", "inc", "sub", "mov", "xor"]
+config["registers"] = ["eax", "ebx", "ecx", "edx"]
 
-keywords = implemented + registers
-blacklist = ["ebp", "esi", "edi", "al", "ah", "bh", "bl", "cl", "ch", "dl", "dh", "es", "ss", "byte", "0x", " + ", "gs:" , "[0]"] #if you need to blacklist things
-MAX_GADGET_LENGTH = 3
+config["blacklist"] = ["ebp", "esi", "edi", "al", "ah", "bh", "bl", "cl", "ch", "dl", "dh", "es", "ss", "byte", "0x", " + ", "gs:" , "[0]"] #if you need to blacklist things
 
-def check_gadget(gadget):
-    inst = gadget.split(" ; ")
-    if len(inst)==0 or len(inst)>MAX_GADGET_LENGTH:
-        return False
-    for i in inst:
-        ops = i.split(" ")
-        if ops[0] not in implemented:
-            return False
-        for w in blacklist:
-            if w in i:
-                return False
-    return True
 
-def gadget_to_c(gadget_set, gadget, name):
-    print "//", gadget
-    insts = gadget.split(" ; ")
-    body = ""
-    header = "void %s(){\n"%name
-    tail = "}\n"
-    for i in insts:
-        body+=inst_to_c(i)
-    if body in gadget_set:
-        return ""
-    else:
-        gadget_set.add(body)
+function_def_block = ""
+switch_block = ""
 
-        return header+body+tail
-
-def inst_to_c(inst):
-    result = ""
-    op = inst[:3]
-    args = inst[4:]
-    if op=="inc":
-        if "dword" in args:
-            result = "\t%s++;\n"%args[-4:-1]
-        else:
-            result = "\t%s++;\n"%args
-    elif op=="pop":
-        result = "\t%s = pop();\n"%args
-    elif op=="add" or op=="sub":
-        return ""
-        return "\t%s();\n"%"not_implemented"
-        a1, a2 = args.split(", ")
-        if "dword ptr" in a1 and "dword ptr" not in a2:
-            result = "\t%s_to_pointer(%s, %s);\n"%(op, a1[-4:-1], a2)
-        elif "dword ptr" not in a1 and "dword ptr" in a2:
-            result = "\t%s_from_pointer(%s, %s);\n"%(op, a1, a2[-4:-1])
-        elif "dword ptr" in a1 and "dword ptr" in a2:
-            result = "\t%s_from_pointer_to_pointer(%s, %s);\n"%(op, a1[-4:-1], a2[-4:-1])
-        else:
-            if op=="add":
-                result = "\t%s = %s + %s;\n"%(a1, a1, a2)
-            if op=="sub":
-                result = "\t%s = %s - %s;\n"%(a1, a1, a2)
-    elif op=="mov":
-        target, val = args.split(", ")
-        if "dword" in target and "dword" not in val:
-            result = "\tmove_mem_const(%s, %s);\n"%(target[-4:-1], val)
-        elif "dword" not in target and "dword" in val:
-            return ""
-            result = "\t%s = move_reg_mem(%s);\n"%(target, val[-4: -1])
-        else:
-            if target.isdigit():
-                #result = "\tmove_reg_const(%sm %s);\n"%(target, val)
-                result = "\t%s = %s;\n"%(target, val)
-               #result = "\tmove_reg_reg(%s, %s);\n"%(target, val)
-    elif op=="xor":
-        a1, a2 = args.split(", ")
-        if a1==a2:
-            result = "\t%s = 0;\n"%a1    
-    elif op=="ret":
-        result = "\treturn;\n"
-    else:
-        return ""
-        result = "\t%s();\n"%"not_implemented"
-    return result
-
-with open(output) as f:
+with open(in_file) as f:
     pruned = []
     data = f.readlines()
     for l in data:
@@ -96,36 +34,64 @@ with open(output) as f:
             _ = l.strip().split(" : ")
             address = _[0]
             gadget = _[1]
-            if check_gadget(gadget):
+            if check_gadget(gadget, config):
                 pruned.append([address, gadget])
-    #    pruned = [line for line in f if any(word in line for word in implemented)]
-    #    pruned = [line for line in pruned if not(any(word in line for word in blacklist))]
     gadget_set = Set()
-    switch_block = ""
     for i in range(len(pruned)):
         gadget_name = "gadget_"+str(len(gadget_set))
         block = gadget_to_c(gadget_set, pruned[i][1], gadget_name)
-        print block
+        function_def_block+= block
         if block!="":
             switch_block += "\t\tif(choice==%s){\n\t\t\t%s();\n\t\t}\n"%(gadget_name.split("_")[1], gadget_name)
 
+Init_block = build_Init_block(config)
 
-    main_header = \
+main_header = \
 'int main(){\n\
 \tint choice = 0;\n\
 \n\
+\tprint_state();\n\
 \t//bounded\n\
 \tfor(int i =0; i< 10; i++){\n\
-\t\tprint_state();\n\
 \t\tchoice = nd();\n\
 \t\tassume(choice>=0 && choice<%s);\n\
 '%len(gadget_set)
-    main_tail = \
+
+
+def build_sassert(config):
+	sassert = ""
+	for i in range(len(config["Goal"]["stack"])):
+		val = config["Goal"]["stack"][i]
+		if val==-1: #we dont care about the value after the trace
+			continue
+		else:
+			sassert+="s%d == %d && "%(i, config["Goal"]["stack"][i])
+	for r in config["registers"]:
+		val = config["Goal"][r]
+		if val==-1: #we dont care about the value after the trace
+			continue
+		else:
+			sassert+="%s == %d && "%(r, config["Goal"][r])
+	return "sassert(!(%s))"%sassert[:-3]
+
+sassert = build_sassert(config)
+
+main_tail = \
 '\t\tprint_state();\n\
-\t\tsassert(eax!=4);\n\
+\t\t%s;\n\
 \t}\n \
 \treturn 0;\n\
-}'
-    print main_header
-    print switch_block
-    print main_tail
+}'%sassert
+
+head_file = open("head.c", "r")
+ls = head_file.readlines()
+with open(out_file, "w") as output:
+	output.write(ls[0])
+	output.write(ls[1])
+	output.write(Init_block)
+	for l in ls[2:]:
+		output.write(l)
+	output.write(function_def_block)
+	output.write(main_header)
+	output.write(switch_block)
+	output.write(main_tail)
