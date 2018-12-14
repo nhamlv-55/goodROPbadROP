@@ -1,12 +1,13 @@
 {
-	"MAX_GADGET_LENGTH": 3,
+	"MAX_GADGET_LENGTH": 5,
+    "shadow_stack": [0,0,0,0],
     "Init": {
     	"eax": 0,
     	"ebx": 0,
     	"ecx": 0,
     	"edx": 0,
     	"stack": [0, 0, 0, 0, 0],
-    	"memory": [-1, -1]
+    	"writeable_memory": [-1, -1],
     },
     "Goal": {
     	"eax": 0,
@@ -14,6 +15,8 @@
     	"ecx": 0,
     	"edx": -1,
     	"stack": [0, 0, 3, 0, 0],
-    	"memory": [-1, -1]
-    }
+    	"writeable_memory": [-1, -1]
+    },
+    "seed": 1337,
+    "no_of_prev": 16
 }
