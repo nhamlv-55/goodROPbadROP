@@ -58,6 +58,8 @@ for i in range(len(gadget_set)):
     \tif(choice==%s){
     \t\tif(%s){
     \t\t\t%s(prev_choice);
+    \t\t}else{
+    \t\t\treturn 0;
     \t\t}
     \t}\n"""%(gadget_name.split("_")[1], safe_guard, gadget_name)
 

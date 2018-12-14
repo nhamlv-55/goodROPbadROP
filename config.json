@@ -1,5 +1,5 @@
 {
-	"MAX_GADGET_LENGTH": 5,
+	"MAX_GADGET_LENGTH": 3,
     "shadow_stack": [0,0,0,0],
     "Init": {
     	"eax": 0,
@@ -7,16 +7,16 @@
     	"ecx": 0,
     	"edx": 0,
     	"stack": [0, 0, 0, 0, 0],
-    	"writeable_memory": [-1, -1],
+    	"writeable_memory": [0, 0, 0]
     },
     "Goal": {
-    	"eax": 0,
-    	"ebx": 0,
-    	"ecx": 0,
-    	"edx": -1,
-    	"stack": [0, 0, 3, 0, 0],
-    	"writeable_memory": [-1, -1]
+        "eax": 5,
+        "ebx": -1,
+        "ecx": 2,
+        "edx": -1,
+        "stack": [-1, -1, -1, -1, -1],
+        "writeable_memory": [0, 0, 3]
     },
     "seed": 1337,
-    "no_of_prev": 16
+    "no_of_prev": 3
 }

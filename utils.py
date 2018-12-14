@@ -41,14 +41,15 @@ def inst_to_c(inst):
             result = "\t%s++;\n"%args
     elif op=="pop":
         result = "\t%s = pop();\n"%args
-    elif op=="add" or op=="sub":
-        return ""
-        return "\t%s();\n"%"not_implemented"
+    elif op=="add":
+        # return ""
+        # return "\t%s();\n"%"not_implemented"
         a1, a2 = args.split(", ")
         if "dword ptr" in a1 and "dword ptr" not in a2:
+            return ""
             result = "\t%s_to_pointer(%s, %s);\n"%(op, a1[-4:-1], a2)
         elif "dword ptr" not in a1 and "dword ptr" in a2:
-            result = "\t%s_from_pointer(%s, %s);\n"%(op, a1, a2[-4:-1])
+            result = "\t%s = \t%s_from_pointer(%s, %s);\n"%(a1, op, a1, a2[-4:-1])
         elif "dword ptr" in a1 and "dword ptr" in a2:
             result = "\t%s_from_pointer_to_pointer(%s, %s);\n"%(op, a1[-4:-1], a2[-4:-1])
         else:
@@ -83,11 +84,29 @@ def build_Init_block(config):
     Init_block = ""
 
     for i in range(len(config["Init"]["stack"])):
-        Init_block+="int s%d = %d; "%(i, config["Init"]["stack"][i])
+        val = config["Init"]["stack"][i]
+        if val==-1:
+            Init_block+="int s%d = nd(); "%(i)
+        else:
+            Init_block+="int s%d = %d; "%(i, val)
+    Init_block+="\n\n"
+
+    for i in range(len(config["Init"]["writeable_memory"])):
+        val = config["Init"]["writeable_memory"][i]
+        if val==-1:
+            Init_block+="int m%d = nd(); "%(i)
+        else:
+            Init_block+="int m%d = %d; "%(i, val)
     Init_block+="\n\n"
 
     for r in config["registers"]:
-        Init_block+="int %s = %d; "%(r, config["Init"][r])
+        val = config["Init"][r]
+        if val==-1:
+            Init_block+="int %s = nd(); "%(r)
+        else:
+            Init_block+="int %s = %d; "%(r, val)
+
+
     Init_block+="\n\n"
     return Init_block
 
@@ -99,6 +118,12 @@ def build_sassert(config):
             continue
         else:
             sassert+="s%d == %d && "%(i, config["Goal"]["stack"][i])
+    for i in range(len(config["Goal"]["writeable_memory"])):
+        val = config["Goal"]["writeable_memory"][i]
+        if val==-1: #we dont care about the value after the trace
+            continue
+        else:
+            sassert+="m%d == %d && "%(i, config["Goal"]["writeable_memory"][i])
     for r in config["registers"]:
         val = config["Goal"][r]
         if val==-1: #we dont care about the value after the trace
