@@ -28,6 +28,37 @@ int pop(){
 	return reg;
 }
 
+void push(int val){
+	s0 = s1;
+	s1 = s2;
+	s2 = s3;
+	s3 = s4;
+	s4 = val;
+}
+
+void push_mem(int address){
+	int val = -1;
+	assume(0<=address && address<=3);
+	switch(address){
+		case 0:
+			val = m0;
+			break;
+		case 1:
+			val = m1;
+			break;
+		case 2:
+			val = m2;
+			break;
+		default:
+			return;
+	}
+	s0 = s1;
+	s1 = s2;
+	s2 = s3;
+	s3 = s4;
+	s4 = val;
+}
+
 void move_mem_const(int address, int val){
 	switch(address){
 		case 0:
