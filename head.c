@@ -2,7 +2,7 @@
 extern int nd(void);
 
 void print_state(){
-	printf("eax: %d, ebx: %d, ecx: %d, edx: %d, ", eax, ebx, ecx, edx);
+	printf("%seax: %d, ebx: %d, ecx: %d, edx: %d, ", "\x1B[32m", eax, ebx, ecx, edx);
 	printf("[");
 	printf("%d ", s0);
 	printf("%d ", s1);
@@ -15,7 +15,7 @@ void print_state(){
 	printf("%d ", m0);
 	printf("%d ", m1);
 	printf("%d ", m2);
-	printf("}\n");
+	printf("}\n %s", "\x1B[0m");
 }
 
 int pop(){

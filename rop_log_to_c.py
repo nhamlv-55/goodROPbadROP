@@ -17,12 +17,14 @@ in_file = args.roplog
 out_file = args.coutput
 
 pruned = []
-config["implemented"] = ["ret", "pop", "add", "inc", "sub", "mov", "xor"]
+config["implemented"] = ["ret", "pop", "inc", "mov", "xor"]
 config["registers"] = ["eax", "ebx", "ecx", "edx"]
 
 config["blacklist"] = ["ebp", "esi", "edi", "al", "ah", "bh", "bl", "cl", "ch", "dl", "dh", "es", "ss", "byte", "0x", " + ", "gs:" , "[0]"] #if you need to blacklist things
 
 random.seed(config["seed"])
+cfi = config["cfi"]
+
 
 function_def_block = ""
 switch_block = ""
@@ -48,20 +50,30 @@ for i in range(len(gadget_set)):
     gadget_name = "gadget_"+str(i)
     # sprinkle edges into the block
     # no_of_prev = random.randint(0, len(gadget_set)-1)
-    possible_prev = random.sample(range(0, len(gadget_set)), config["no_of_prev"])
+    possible_prev = cfi[str(i)]
     safe_guard = ""
     for p in possible_prev:
         safe_guard+="(prev_choice == %d) || "%p
     safe_guard = safe_guard[:-3]
     print safe_guard
-    switch_block += """
-    \tif(choice==%s){
-    \t\tif(%s){
-    \t\t\t%s(prev_choice);
-    \t\t}else{
-    \t\t\treturn 0;
-    \t\t}
-    \t}\n"""%(gadget_name.split("_")[1], safe_guard, gadget_name)
+
+    if config["use_cfi"]==0:
+        switch_block += """
+        \tif(choice==%s){
+        \t\tprintf("%s \\n");
+        \t\t//assume(%s);
+        \t\t%s();
+        \t}\n"""%(i, i, safe_guard, gadget_name)
+
+    else:
+        switch_block += """
+        \tif(choice==%s){
+        \t\tif(%s){
+        \t\t\t%s();
+        \t\t}else{
+        \t\t\treturn 0;
+        \t\t}
+        \t}\n"""%(gadget_name.split("_")[1], safe_guard, gadget_name)
 
 Init_block = build_Init_block(config)
 

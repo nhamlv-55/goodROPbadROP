@@ -18,7 +18,7 @@ def gadget_to_c(gadget_set, gadget, name):
     header = "//" + gadget + "\n"
     insts = gadget.split(" ; ")
     body = ""
-    header += "void %s(int prev_choice){\n"%name
+    header += "void %s(){\n"%name
     header += '\tprintf("%s\\n");\n'%(gadget)
     tail = "}\n"
     for i in insts:
@@ -41,12 +41,18 @@ def inst_to_c(inst):
             result = "\t%s++;\n"%args
     elif op=="pop":
         result = "\t%s = pop();\n"%args
+
+    # elif op=="push":
+    #     if "dword" in args:
+    #         result = "\tpush_mem(%s);\n"%args[-4:-1]
+    #     else:
+    #         result = "\tpush(%s);\n"%args
     elif op=="add":
         # return ""
         # return "\t%s();\n"%"not_implemented"
         a1, a2 = args.split(", ")
         if "dword ptr" in a1 and "dword ptr" not in a2:
-            return ""
+            # return ""
             result = "\t%s_to_pointer(%s, %s);\n"%(op, a1[-4:-1], a2)
         elif "dword ptr" not in a1 and "dword ptr" in a2:
             result = "\t%s = \t%s_from_pointer(%s, %s);\n"%(a1, op, a1, a2[-4:-1])
