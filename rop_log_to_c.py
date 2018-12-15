@@ -8,6 +8,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--roplog", help="all the rops founded by ROPgadget")
 parser.add_argument("--config", help="a json file contain the desire Init and Goal state")
 parser.add_argument("--coutput", help="the output c program")
+parser.add_argument("--use_cfi", help="the output c program")
 args = parser.parse_args()
 
 with open(args.config) as f:
@@ -17,14 +18,15 @@ in_file = args.roplog
 out_file = args.coutput
 
 pruned = []
-config["implemented"] = ["ret", "pop", "inc", "mov", "xor"]
+config["implemented"] = ["ret", "pop", "inc", "mov", "xor", "push"]
 config["registers"] = ["eax", "ebx", "ecx", "edx"]
 
-config["blacklist"] = ["ebp", "esi", "edi", "al", "ah", "bh", "bl", "cl", "ch", "dl", "dh", "es", "ss", "byte", "0x", " + ", "gs:" , "[0]"] #if you need to blacklist things
+config["blacklist"] = ["ebp", "esi", "edi", "al", "ah", "bh", "bl", "cl", "ch", "cs", "dl", "ds", "dh", "es", "ss", "byte", "0x", " + ", "gs:" , "[0]"] #if you need to blacklist things
 
 random.seed(config["seed"])
 cfi = config["cfi"]
-
+use_cfi = int(args.use_cfi)
+print "Use CFI:", args.use_cfi
 
 function_def_block = ""
 switch_block = ""
@@ -50,14 +52,17 @@ for i in range(len(gadget_set)):
     gadget_name = "gadget_"+str(i)
     # sprinkle edges into the block
     # no_of_prev = random.randint(0, len(gadget_set)-1)
-    possible_prev = cfi[str(i)]
+    if str(i) in cfi:
+    	possible_prev = cfi[str(i)]
+    else:
+    	possible_prev = [random.randint(0, len(gadget_set)-1)]
     safe_guard = ""
     for p in possible_prev:
-        safe_guard+="(prev_choice == %d) || "%p
+        safe_guard+="prev_choice == %d || "%p
     safe_guard = safe_guard[:-3]
-    print safe_guard
+    # print safe_guard
 
-    if config["use_cfi"]==0:
+    if use_cfi==0:
         switch_block += """
         \tif(choice==%s){
         \t\tprintf("%s \\n");
@@ -69,11 +74,12 @@ for i in range(len(gadget_set)):
         switch_block += """
         \tif(choice==%s){
         \t\tif(%s){
+        \t\t\tprintf("%s \\n");
         \t\t\t%s();
         \t\t}else{
         \t\t\treturn 0;
         \t\t}
-        \t}\n"""%(gadget_name.split("_")[1], safe_guard, gadget_name)
+        \t}\n"""%(i, safe_guard, i, gadget_name)
 
 Init_block = build_Init_block(config)
 

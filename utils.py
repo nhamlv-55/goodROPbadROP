@@ -36,17 +36,17 @@ def inst_to_c(inst):
     args = inst[4:]
     if op=="inc":
         if "dword" in args:
-            result = "\t%s++;\n"%args[-4:-1]
+            result = "\tadd_to_pointer(%s, 1);\n"%args[-4:-1]
         else:
             result = "\t%s++;\n"%args
     elif op=="pop":
         result = "\t%s = pop();\n"%args
 
-    # elif op=="push":
-    #     if "dword" in args:
-    #         result = "\tpush_mem(%s);\n"%args[-4:-1]
-    #     else:
-    #         result = "\tpush(%s);\n"%args
+    elif op=="pus":
+        if "dword" in args:
+            result = "\tpush_mem(%s);\n"%args[-4:-1]
+        else:
+            result = "\tpush(%s);\n"%args[1:]
     elif op=="add":
         # return ""
         # return "\t%s();\n"%"not_implemented"
