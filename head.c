@@ -60,6 +60,7 @@ void push_mem(int address){
 }
 
 void move_mem_const(int address, int val){
+	assume(0<=address && address<=3);
 	switch(address){
 		case 0:
 			m0 = val;
@@ -76,6 +77,7 @@ void move_mem_const(int address, int val){
 }
 
 int move_reg_mem(int address){
+	assume(0<=address && address<=3);
 	switch(address){
 		case 0:
 			return s0;
@@ -86,16 +88,11 @@ int move_reg_mem(int address){
 		case 2:
 			return s2;
 			break;
-		case 3:
-			return s3;
-			break;
-		case 4:
-			return s4;
-			break;
 	}
 }
 
 void add_to_pointer(int address, int val){
+	assume(0<=address && address<=3);
 	switch(address){
 		case 0:
 			m0+= val;
@@ -112,6 +109,7 @@ void add_to_pointer(int address, int val){
 }
 
 int add_from_pointer(int reg, int address){
+	assume(0<=address && address<=3);
 	switch(address){
 		case 0:
 			return reg+m0;
@@ -122,8 +120,6 @@ int add_from_pointer(int reg, int address){
 		case 2:
 			return reg+m2;
 			break;
-		default:
-			assert(0);
 	}
 }
 

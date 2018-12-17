@@ -10,12 +10,12 @@
     	"writeable_memory": [0, 0, 0]
     },
     "Goal": {
-        "eax": -1,
-        "ebx": 4,
-        "ecx": -1,
-        "edx": -1,
-        "stack": [-1, -1, 2, -1, -1],
-        "writeable_memory": [-1, 3, -1]
+        "eax": 1,
+        "ebx": 2,
+        "ecx": 3,
+        "edx": 4,
+        "stack": [-1, -1, -1, -1, -1],
+        "writeable_memory": [3, 2, 0]
     },
     "seed": 1337,
     "no_of_prev": 3,
